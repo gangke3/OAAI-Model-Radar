@@ -1,0 +1,41 @@
+# ============================================================
+# OpenClaw Node Manager — .gitignore
+# ============================================================
+
+# ── 敏感配置文件（绝不上传）──────────────────────────────────
+configs/*.json
+!configs/example_config.json
+
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.spec
+venv/
+.venv/
+env/
+
+# ── Node.js（manager-ui 构建产物）──────────────────────────
+node_modules/
+manager-ui/dist/
+manager-ui/.env
+manager-ui/.env.local
+
+# ── OS/Editor ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.code-workspace
+
+# ── 日志与临时文件 ─────────────────────────────────────────
+*.log
+*.tmp
+*.bak

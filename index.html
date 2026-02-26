@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Node Manager</title>
+    <!-- React & Babel CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons CDN (Added fallback cdnjs) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.294.0/umd/lucide.min.js"></script>
+    <script>
+        if (!window.lucide) {
+            document.write('<script src="https://unpkg.com/lucide@latest"><\/script>');
+        }
+    </script>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+    <style>
+        :root {
+            --bg-color: hsl(222, 47%, 4%);
+            --panel-bg: hsla(222, 47%, 7%, 0.8);
+            --accent-color: hsl(210, 100%, 66%);
+            --accent-glow: hsla(210, 100%, 66%, 0.2);
+            --text-primary: hsl(210, 40%, 98%);
+            --text-secondary: hsl(215, 15%, 70%);
+            --border-color: hsla(217, 19%, 27%, 0.5);
+            --border-hover: hsla(210, 100%, 66%, 0.4);
+            --success: hsl(142, 71%, 45%);
+            --success-bg: hsla(142, 71%, 45%, 0.1);
+            --danger: hsl(354, 70%, 54%);
+            --danger-bg: hsla(354, 70%, 54%, 0.1);
+            --warning: hsl(45, 93%, 47%);
+            --glass-blur: blur(16px);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 12px 24px -8px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, 0.6);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --bg-gradient: radial-gradient(circle at 50% 0%, hsl(222, 47%, 10%), var(--bg-color));
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            background-image: var(--bg-gradient);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        ::selection {
+            background: var(--accent-glow);
+            color: var(--accent-color);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        nav {
+            height: 72px;
+            background: var(--panel-bg);
+            backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .config-selector {
+            background: hsla(222, 47%, 12%, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 6px 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            min-width: 180px;
+            position: relative;
+        }
+
+        .config-selector:hover {
+            border-color: var(--border-hover);
+            background: hsla(222, 47%, 15%, 0.8);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .config-selector select {
+            appearance: none;
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            outline: none;
+            padding: 8px 30px 8px 12px;
+            text-align: center;
+        }
+
+        .config-selector .chevron-icon {
+            position: absolute;
+            right: 12px;
+            pointer-events: none;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+        }
+
+        .config-selector select option {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 12px;
+        }
+
+        .btn {
+            height: 36px;
+            padding: 0 16px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            background: none;
+            color: inherit;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 4px 14px 0 hsla(210, 100%, 66%, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 6px 20px 0 hsla(210, 100%, 66%, 0.5);
+        }
+
+        .btn-outline {
+            background: hsla(0, 0%, 100%, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: hsla(0, 0%, 100%, 0.08);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(0.96);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        main {
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 1.8rem;
+            letter-spacing: -0.01em;
+            margin-bottom: 8px;
+        }
+
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 24px;
+            padding: 20px 0;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease-out backwards;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-lg), 0 0 20px var(--accent-glow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .info-row {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+
+        .info-row b {
+            color: var(--text-primary);
+            font-weight: 600;
+            min-width: 70px;
+        }
+
+        .info-row code {
+            font-family: 'JetBrains Mono', monospace;
+            background: hsla(0, 0%, 0%, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--accent-color);
+            word-break: break-all;
+        }
+
+        .primary-badge {
+            background: var(--success-bg);
+            color: var(--success);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid hsla(142, 71%, 45%, 0.2);
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border-radius: 100px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge.success {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid hsla(142, 71%, 45%, 0.2);
+        }
+
+        .status-badge.error {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid hsla(354, 70%, 54%, 0.2);
+        }
+
+        .icon-btn {
+            background: hsla(0, 0%, 100%, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-primary);
+            background: hsla(0, 0%, 100%, 0.15);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .icon-btn.delete:hover {
+            color: var(--danger);
+            background: var(--danger-bg);
+            border-color: var(--danger);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: hsla(222, 47%, 2%, 0.8);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal {
+            background: hsla(222, 47%, 8%, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: hsla(0, 0%, 0%, 0.2);
+            color: #fff;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent-color);
+            background: hsla(222, 47%, 12%, 1);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .loading-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            background: var(--bg-color);
+        }
+
+        .protocol-warning {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 40px;
+            text-align: center;
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            nav {
+                padding: 0 20px;
+            }
+
+            nav .btn span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const API_BASE = '/api';
+
+        // 改进的图标组件，避免 DOM 冲突
+        const Icon = ({ name, size = 16, className = "", style = {}, ...props }) => {
+            const [svg, setSvg] = useState('');
+            useEffect(() => {
+                let isMounted = true;
+                const renderIcon = () => {
+                    if (window.lucide && name && isMounted) {
+                        const pascalName = name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+                        const iconNode = lucide.icons[pascalName] || lucide.icons[name];
+                        if (iconNode) {
+                            const isFullNode = typeof iconNode[0] === 'string';
+                            const childrenArray = isFullNode ? (iconNode[2] || []) : iconNode;
+                            const defaultAttrs = {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                width: size,
+                                height: size,
+                                viewBox: "0 0 24 24",
+                                fill: "none",
+                                stroke: "currentColor",
+                                strokeWidth: "2",
+                                strokeLinecap: "round",
+                                strokeLinejoin: "round",
+                                class: `lucide lucide-${name} ${className}`
+                            };
+                            const finalAttrs = isFullNode ? { ...defaultAttrs, ...iconNode[1] } : defaultAttrs;
+
+                            const childrenString = childrenArray.map(child => {
+                                const targetTag = child[0];
+                                const cAttrsStr = Object.entries(child[1] || {}).map(([k, v]) => `${k}="${v}"`).join(' ');
+                                return `<${targetTag} ${cAttrsStr}></${targetTag}>`;
+                            }).join('');
+
+                            const attrsStr = Object.entries(finalAttrs).map(([k, v]) => `${k}="${v}"`).join(' ');
+                            setSvg(`<svg ${attrsStr}>${childrenString}</svg>`);
+                        } else {
+                            // 彻底移除回退字母显示
+                            setSvg('');
+                        }
+                    }
+                };
+
+                if (!window.lucide) {
+                    const timer = setInterval(() => {
+                        if (window.lucide) {
+                            renderIcon();
+                            clearInterval(timer);
+                        }
+                    }, 50);
+                    return () => { isMounted = false; clearInterval(timer); };
+                } else {
+                    renderIcon();
+                    return () => { isMounted = false; };
+                }
+            }, [name, size, className]);
+
+            if (!svg) {
+                return null;
+            }
+
+            return (
+                <span
+                    style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 0,
+                        flexShrink: 0,
+                        width: size,
+                        height: size,
+                        verticalAlign: 'middle',
+                        ...style
+                    }}
+                    dangerouslySetInnerHTML={{ __html: svg }}
+                    {...props}
+                />
+            );
+        };
+
+        const App = () => {
+            const [providers, setProviders] = useState({});
+            const [statusMap, setStatusMap] = useState({});
+            const [loading, setLoading] = useState(true);
+            const [showAddModal, setShowAddModal] = useState(false);
+            const [showImportModal, setShowImportModal] = useState(false);
+            const [testing, setTesting] = useState(false);
+            const [testingProvider, setTestingProvider] = useState(null);
+            const [formData, setFormData] = useState({ name: '', baseUrl: '', apiKey: '', model: '' });
+            const [isEditMode, setIsEditMode] = useState(false);
+            const [addMode, setAddMode] = useState('form'); // 'form' | 'json'
+            const [jsonCode, setJsonCode] = useState('');
+            const [selectedError, setSelectedError] = useState(null);
+            const [configs, setConfigs] = useState({});
+            const [currentConfigName, setCurrentConfigName] = useState('默认配置');
+            const [pasteText, setPasteText] = useState('');
+            const [isDirty, setIsDirty] = useState(false);
+
+            const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', options: [] });
+            const [promptModal, setPromptModal] = useState({ isOpen: false, title: '', placeholder: '', onConfirm: null });
+            const [promptInputValue, setPromptInputValue] = useState('');
+
+            const isLocalFile = window.location.protocol === 'file:';
+
+            useEffect(() => {
+                fetchProviders();
+                const handleBeforeUnload = (e) => {
+                    if (isDirty) {
+                        e.preventDefault();
+                        e.returnValue = '您有未保存的更改，确定要离开吗？';
+                        return e.returnValue;
+                    }
+                };
+                window.addEventListener('beforeunload', handleBeforeUnload);
+                return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+            }, [isDirty]);
+
+            useEffect(() => {
+                const cfg = configs[currentConfigName];
+                if (cfg) {
+                    // 标准化处理：确保 models.providers 结构存在
+                    if (!cfg.models) cfg.models = { providers: {} };
+                    if (!cfg.models.providers && cfg.providers) {
+                        cfg.models.providers = cfg.providers;
+                    }
+                    setProviders(cfg.models.providers || {});
+                }
+            }, [currentConfigName, configs]);
+
+            const fetchProviders = async () => {
+                if (isLocalFile) {
+                    setLoading(false);
+                    return;
+                }
+                try {
+                    const listResp = await fetch(`${API_BASE}/config/list`);
+                    const configList = await listResp.json();
+
+                    const storedCurrent = localStorage.getItem('openclaw_current_config_name');
+                    const initialName = (storedCurrent && configList.includes(storedCurrent)) ? storedCurrent : (configList[0] || '默认配置');
+                    setCurrentConfigName(initialName);
+
+                    const resp = await fetch(`${API_BASE}/config?config=${encodeURIComponent(initialName)}`);
+                    const data = await resp.json();
+
+                    const normalizedData = data.models?.providers ? data : { ...data, models: { providers: data.providers || data || {} } };
+
+                    setConfigs(prev => {
+                        const newMap = { ...prev };
+                        configList.forEach(name => {
+                            newMap[name] = name === initialName ? normalizedData : (prev[name] || null);
+                        });
+                        return newMap;
+                    });
+                    setProviders(normalizedData.models?.providers || {});
+                    localStorage.setItem('openclaw_current_config_name', initialName);
+                } catch (err) {
+                    console.error('Fetch error:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const saveConfigToLocalState = (newProviders) => {
+                const activeConfig = configs[currentConfigName] || { models: { providers: {} } };
+                const updatedConfig = { ...activeConfig, models: { ...activeConfig.models, providers: newProviders } };
+                setConfigs({ ...configs, [currentConfigName]: updatedConfig });
+                setProviders(newProviders);
+                setIsDirty(true);
+            };
+
+            const handleManualSave = async () => {
+                const activeData = configs[currentConfigName];
+                if (!activeData) return false;
+                try {
+                    const resp = await fetch(`${API_BASE}/config?config=${encodeURIComponent(currentConfigName)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(activeData)
+                    });
+                    const result = await resp.json();
+                    if (result.status === 'success') {
+                        setIsDirty(false);
+                        alert(`配置 "${currentConfigName}" 已保存成功！`);
+                        return true;
+                    }
+                    throw new Error(result.error);
+                } catch (err) {
+                    alert('保存失败: ' + err.message);
+                    return false;
+                }
+            };
+
+            const switchToConfig = async (name) => {
+                if (name === currentConfigName) return;
+                const doSwitch = async () => {
+                    try {
+                        setLoading(true);
+                        const resp = await fetch(`${API_BASE}/config?config=${encodeURIComponent(name)}`);
+                        const data = await resp.json();
+                        setConfigs(prev => ({ ...prev, [name]: data }));
+                        setCurrentConfigName(name);
+                        setIsDirty(false);
+                        localStorage.setItem('openclaw_current_config_name', name);
+                    } catch (err) {
+                        alert('切换失败');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                if (isDirty) {
+                    setConfirmModal({
+                        isOpen: true,
+                        title: '未保存的更改',
+                        message: `当前配置 "${currentConfigName}" 有未保存的更改。是否保存后再切换？`,
+                        options: [
+                            { label: '保存并切换', type: 'primary', onClick: async () => { if (await handleManualSave()) doSwitch(); } },
+                            { label: '放弃更改切换', type: 'danger', onClick: doSwitch },
+                            { label: '取消', type: 'outline', onClick: () => { } }
+                        ]
+                    });
+                    return;
+                }
+                doSwitch();
+            };
+
+            const getUniqueConfigName = (baseName) => {
+                let name = baseName;
+                let counter = 1;
+                const existingNames = Object.keys(configs);
+                while (existingNames.includes(name)) {
+                    name = `${baseName}_${counter}`;
+                    counter++;
+                }
+                return name;
+            };
+
+            const handleCreateNew = () => {
+                const uniqueName = getUniqueConfigName('新配置文件');
+                setPromptInputValue(uniqueName);
+                setPromptModal({
+                    isOpen: true,
+                    title: '新建配置',
+                    placeholder: '请输入新配置文件名 (例如: OpenAI_Config)',
+                    onConfirm: async (name) => {
+                        const empty = { models: { providers: {} }, agents: { defaults: { model: { primary: '' } } } };
+                        try {
+                            const resp = await fetch(`${API_BASE}/config?config=${encodeURIComponent(name)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(empty)
+                            });
+                            if ((await resp.json()).status === 'success') {
+                                setConfigs(prev => ({ ...prev, [name]: empty }));
+                                setCurrentConfigName(name);
+                                setIsDirty(false);
+                                alert('新建成功');
+                            }
+                        } catch (e) { alert('新建失败'); }
+                    }
+                });
+            };
+
+            const handleRename = (oldName) => {
+                setPromptInputValue(oldName);
+                setPromptModal({
+                    isOpen: true,
+                    title: '重命名配置',
+                    placeholder: '请输入新名称',
+                    onConfirm: async (newName) => {
+                        if (newName === oldName) return;
+                        const data = configs[oldName];
+                        // 实际上后端目前没提供 rename API，我们通过 POST 新的再逻辑删除旧的模拟（或保持同名覆盖）
+                        // 这里的简化方案是 POST 新文件
+                        try {
+                            await fetch(`${API_BASE}/config?config=${encodeURIComponent(newName)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(data)
+                            });
+                            const nextConfigs = { ...configs, [newName]: data };
+                            delete nextConfigs[oldName];
+                            setConfigs(nextConfigs);
+                            setCurrentConfigName(newName);
+                            alert('重命名已应用 (请手动删除旧文件，如果需要)');
+                        } catch (e) { alert('操作失败'); }
+                    }
+                });
+            };
+
+            const handleDeleteConfig = async () => {
+                console.log('handleDeleteConfig clicked, current:', currentConfigName);
+                const name = currentConfigName;
+                if (Object.keys(configs).length <= 1) {
+                    alert('请至少保留一个配置文件，无法删除最后一个配置。');
+                    return;
+                }
+
+                setConfirmModal({
+                    isOpen: true,
+                    title: '确认删除',
+                    message: `确定要删除配置文件 "${name}" 吗？此操作不可撤销。`,
+                    options: [
+                        {
+                            label: '确定删除',
+                            type: 'danger',
+                            onClick: async () => {
+                                try {
+                                    const resp = await fetch(`${API_BASE}/config?config=${encodeURIComponent(name)}`, {
+                                        method: 'DELETE'
+                                    });
+                                    const result = await resp.json();
+                                    if (result.status === 'success') {
+                                        setConfigs(prev => {
+                                            const next = { ...prev };
+                                            delete next[name];
+                                            return next;
+                                        });
+                                        // 延迟执行切换逻辑，确保 configs 已更新
+                                        setTimeout(() => {
+                                            const remaining = Object.keys(configs).filter(k => k !== name);
+                                            const nextName = remaining[0] || '默认配置';
+                                            setCurrentConfigName(nextName);
+                                            setIsDirty(false);
+                                            alert('删除成功');
+                                        }, 100);
+                                    } else {
+                                        alert('删除失败: ' + result.error);
+                                    }
+                                } catch (e) {
+                                    alert('删除失败: ' + e.message);
+                                }
+                            }
+                        },
+                        {
+                            label: '取消',
+                            type: 'outline',
+                            onClick: () => { }
+                        }
+                    ]
+                });
+            };
+
+            const exportConfig = () => {
+                const data = configs[currentConfigName];
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentConfigName}.json`;
+                a.click();
+            };
+
+            const runSingleTest = async (name, config) => {
+                setTestingProvider(name);
+                try {
+                    const resp = await fetch(`${API_BASE}/test/${encodeURIComponent(name)}?config=${encodeURIComponent(currentConfigName)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(config)
+                    });
+                    const result = await resp.json();
+                    setStatusMap(prev => ({ ...prev, [name]: result }));
+                } catch (err) {
+                    setStatusMap(prev => ({ ...prev, [name]: { status: 'error', message: err.message } }));
+                } finally {
+                    setTestingProvider(null);
+                }
+            };
+
+            const runGlobalTest = async () => {
+                setTesting(true);
+                try {
+                    const resp = await fetch(`${API_BASE}/test?config=${encodeURIComponent(currentConfigName)}`, { method: 'POST' });
+                    setStatusMap(await resp.json());
+                } catch (err) { alert('测试失败'); }
+                finally { setTesting(false); }
+            };
+
+            const setPrimaryModel = (providerName) => {
+                const activeConfig = configs[currentConfigName] || { models: { providers: {} } };
+                const provider = (activeConfig.models?.providers || {})[providerName];
+                const modelId = provider?.models?.[0]?.id;
+
+                if (!modelId) {
+                    alert('该节点没有定义模型，无法设为主模型');
+                    return;
+                }
+
+                const updatedConfig = {
+                    ...activeConfig,
+                    agents: {
+                        ...activeConfig.agents,
+                        defaults: {
+                            ...activeConfig.agents?.defaults,
+                            model: { primary: `${providerName}/${modelId}` }
+                        }
+                    }
+                };
+
+                setConfigs({ ...configs, [currentConfigName]: updatedConfig });
+                setIsDirty(true);
+            };
+
+            const handleAddModel = (e) => {
+                e.preventDefault();
+                let newProviders = { ...providers };
+
+                if (addMode === 'json') {
+                    try {
+                        const parsed = JSON.parse(jsonCode);
+                        // 支持两种格式: 直接是对象 { name: {...} } 或 数组 [{ name: ... }, ...] 或 单个 Provider 对象 (需手动输名字)
+                        // 这里我们约定 JSON 模式下输入的是单一 Provider 的配置，或者是带有名称的对象
+                        if (parsed.name && (parsed.baseUrl || parsed.apiKey)) {
+                            // 格式 1: { name: "xxx", baseUrl: "...", ... }
+                            const { name, ...config } = parsed;
+                            newProviders[name] = {
+                                ...config,
+                                api: config.api || "openai-completions",
+                                models: config.models || [{ id: config.model || "default", name: config.model || "default", reasoning: false, input: ["text"], contextWindow: 128000, maxTokens: 8192 }]
+                            };
+                        } else if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                            // 格式 2: 直接是配置项，名称使用表单里的（如果填了）
+                            const name = formData.name || `节点_${Date.now().toString().slice(-4)}`;
+                            newProviders[name] = {
+                                ...parsed,
+                                api: parsed.api || "openai-completions",
+                                models: parsed.models || [{ id: parsed.model || "default", name: parsed.model || "default", reasoning: false, input: ["text"], contextWindow: 128000, maxTokens: 8192 }]
+                            };
+                        } else {
+                            throw new Error("无效的 Provider JSON 格式");
+                        }
+                    } catch (err) {
+                        alert('JSON 解析失败: ' + err.message);
+                        return;
+                    }
+                } else {
+                    const { name, ...config } = formData;
+                    if (!name) { alert('请输入节点名称'); return; }
+                    newProviders[name] = {
+                        baseUrl: config.baseUrl,
+                        apiKey: config.apiKey,
+                        api: "openai-completions",
+                        models: [{ id: config.model, name: config.model, reasoning: false, input: ["text"], contextWindow: 128000, maxTokens: 8192 }]
+                    };
+                }
+
+                saveConfigToLocalState(newProviders);
+                setShowAddModal(false);
+                setFormData({ name: '', baseUrl: '', apiKey: '', model: '' });
+                setJsonCode('');
+                setIsEditMode(false);
+            };
+
+            const handleEdit = (name, config) => {
+                setFormData({
+                    name: name,
+                    baseUrl: config.baseUrl,
+                    apiKey: config.apiKey,
+                    model: config.models?.[0]?.id || ''
+                });
+                setJsonCode(JSON.stringify(config, null, 2));
+                setAddMode('form');
+                setIsEditMode(true);
+                setShowAddModal(true);
+            };
+
+            const processImport = (json, defaultName) => {
+                setShowImportModal(false);
+                setPasteText('');
+                const uniqueName = getUniqueConfigName(defaultName || '导入配置');
+                setPromptInputValue(uniqueName);
+                setPromptModal({
+                    isOpen: true,
+                    title: '导入并新建配置文件',
+                    placeholder: '请为新导入的文件命名',
+                    onConfirm: async (name) => {
+                        if (!name) return;
+                        if (isLocalFile) {
+                            setConfigs(prev => ({ ...prev, [name]: json }));
+                            setCurrentConfigName(name);
+                            setIsDirty(true);
+                            return;
+                        }
+                        try {
+                            const resp = await fetch(`${API_BASE}/config?config=${encodeURIComponent(name)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(json)
+                            });
+                            const result = await resp.json();
+                            if (result.status === 'success') {
+                                setConfigs(prev => ({ ...prev, [name]: json }));
+                                setCurrentConfigName(name);
+                                setIsDirty(false);
+                            } else {
+                                throw new Error(result.error || '未知保存错误');
+                            }
+                        } catch (e) {
+                            alert('保存为新文件失败: ' + e.message);
+                        }
+                    }
+                });
+            };
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        if (!json.models) throw new Error("无效的 OpenClaw 配置格式");
+                        const defaultName = file.name.replace('.json', '');
+                        processImport(json, defaultName);
+                    } catch (err) {
+                        alert('解析配置文件失败: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            };
+
+            const maskApiKey = (key) => {
+                if (!key) return '';
+                if (key.length <= 8) return '****';
+                return `${key.slice(0, 4)}****${key.slice(-4)}`;
+            };
+
+            if (loading) return (
+                <div className="loading-screen">
+                    <Icon name="refresh-cw" size={40} className="spin" style={{ stroke: 'var(--accent-color)' }} />
+                    正在连接 OpenClaw 服务...
+                </div>
+            );
+
+            return (
+                <div className="container">
+                    {isLocalFile && (
+                        <div className="protocol-warning">
+                            检测到您直接打开了本地 HTML 文件。由于浏览器安全限制，功能可能无法正常工作。
+                            请确保运行了 <code>python server.py</code> 并通过 <code>http://127.0.0.1:5000</code> 访问。
+                        </div>
+                    )}
+                    <nav>
+                        <div className="logo">
+                            <Icon name="database" size={24} style={{ marginRight: 10, stroke: 'var(--accent-color)' }} />
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '0.5px' }}>OpenClaw</span>
+                                {(() => {
+                                    const primary = configs[currentConfigName]?.agents?.defaults?.model?.primary;
+                                    return primary ? (
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--accent-color)', opacity: 0.8, marginTop: -2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-color)', boxShadow: '0 0 8px var(--accent-color)' }}></div>
+                                            主模型: {primary}
+                                        </div>
+                                    ) : null;
+                                })()}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div className="config-selector" title="选择配置文件">
+                                <select value={currentConfigName} onChange={(e) => switchToConfig(e.target.value)}>
+                                    {Object.keys(configs).map(name => <option key={name} value={name}>{name}</option>)}
+                                </select>
+                                <div className="chevron-icon">
+                                    <Icon name="chevron-down" size={14} />
+                                </div>
+                            </div>
+
+                            <button className="btn btn-outline" onClick={handleCreateNew} title="新建配置"><Icon name="file-plus" size={14} /><span>新建</span></button>
+                            <button className="btn btn-outline" onClick={() => handleRename(currentConfigName)} title="重命名当前配置"><Icon name="edit-3" size={14} /><span>更名</span></button>
+                            <button className="btn btn-outline" onClick={exportConfig} title="导出 JSON"><Icon name="download" size={14} /><span>导出</span></button>
+                            <button className="btn btn-outline" onClick={() => setShowImportModal(true)} title="导入 JSON"><Icon name="upload" size={14} /><span>导入</span></button>
+                            <button className="btn btn-outline" onClick={handleDeleteConfig} title="删除当前配置" style={{ color: 'var(--danger)', borderColor: 'hsla(354, 70%, 54%, 0.3)' }}><Icon name="trash-2" size={14} /><span>删除</span></button>
+
+                            <div style={{ width: 1, height: 24, background: 'var(--border-color)', margin: '0 8px' }} />
+
+                            <button className="btn btn-outline" onClick={handleManualSave} disabled={!isDirty} style={isDirty ? { borderColor: 'var(--warning)', color: 'var(--warning)' } : {}}><Icon name="save" size={14} /><span>保存</span></button>
+                            <button className="btn btn-primary" onClick={() => {
+                                setIsEditMode(false);
+                                setFormData({ name: '', baseUrl: '', apiKey: '', model: '' });
+                                setJsonCode('');
+                                setAddMode('form');
+                                setShowAddModal(true);
+                            }}><Icon name="plus" size={16} /><span>增加节点</span></button>
+                        </div>
+                    </nav>
+
+                    <main>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
+                            <div>
+                                <h1>本地节点管理</h1>
+                                <p style={{ color: 'var(--text-secondary)' }}>
+                                    当前配置: <span style={{ color: 'var(--accent-color)', fontWeight: 600 }}>{currentConfigName}</span>
+                                    {isDirty && <span style={{ marginLeft: 10, color: 'var(--warning)', fontSize: '0.8rem' }}>(有未保存更改)</span>}
+                                </p>
+                            </div>
+                            <button className="btn btn-outline" onClick={runGlobalTest} disabled={testing}><Icon name={testing ? "refresh-cw" : "activity"} size={16} className={testing ? "spin" : ""} /><span>测试全部</span></button>
+                        </div>
+
+                        <div className="provider-grid">
+                            {(() => {
+                                let __foundPrimary = false;
+                                return Object.entries(providers).map(([name, config], idx) => {
+                                    const activeConfig = configs[currentConfigName];
+                                    const rawPrimary = activeConfig?.agents?.defaults?.model?.primary;
+                                    const modelId = config.models?.[0]?.id;
+
+                                    let isPrimary = false;
+                                    if (!__foundPrimary && modelId && rawPrimary) {
+                                        const expectedStandard = `${name}/${modelId}`;
+                                        // 更加宽松的匹配逻辑
+                                        if (
+                                            rawPrimary === expectedStandard ||
+                                            rawPrimary === name ||
+                                            rawPrimary === modelId ||
+                                            (rawPrimary.includes('/') && rawPrimary.split('/').pop() === modelId)
+                                        ) {
+                                            isPrimary = true;
+                                            __foundPrimary = true;
+                                        }
+                                    }
+
+                                    return (
+                                        <div key={name} className="card" style={{ '--i': idx }}>
+                                            <div className="card-header">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+                                                    <h3>{name}</h3>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button className="btn btn-outline" title="复制 JSON" onClick={() => {
+                                                        const jsonStr = JSON.stringify({ name, ...config }, null, 2);
+                                                        navigator.clipboard.writeText(jsonStr).then(() => alert('JSON 已复制到剪贴板')).catch(err => alert('复制失败: ' + err));
+                                                    }}><Icon name="copy" size={14} /><span>复制</span></button>
+                                                    <button className="btn btn-outline" title="编辑" onClick={() => handleEdit(name, config)}><Icon name="edit" size={14} /><span>编辑</span></button>
+                                                    <button className="btn btn-outline delete" style={{ borderColor: 'var(--danger-bg)', color: 'var(--danger)' }} title="删除" onClick={() => {
+                                                        if (confirm(`确定从当前配置中移除 ${name}?`)) {
+                                                            const newP = { ...providers }; delete newP[name]; saveConfigToLocalState(newP);
+                                                        }
+                                                    }}>
+                                                        <Icon name="trash-2" size={14} /><span>删除</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div className="info-row" title="接口类型">
+                                                    <Icon name="box" size={12} /> <code>{config.api || 'openai-completions'}</code>
+                                                </div>
+                                                <div className="info-row" title="接口地址">
+                                                    <Icon name="globe" size={12} /> <span>{config.baseUrl}</span>
+                                                </div>
+                                                <div className="info-row" title="API密钥">
+                                                    <Icon name="shield" size={12} /> <code>{maskApiKey(config.apiKey)}</code>
+                                                </div>
+                                                <div className="info-row" title="模型列表">
+                                                    <Icon name="layers" size={12} />
+                                                    <span style={{ fontSize: '0.8rem' }}>
+                                                        {config.models?.length || 0} 个模型 ({config.models?.[0]?.id || '未定义'}...)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                                                <div style={{ display: 'flex', gap: 8 }}>
+                                                    <button
+                                                        className={`btn ${isPrimary ? 'btn-primary' : 'btn-outline'}`}
+                                                        onClick={() => setPrimaryModel(name)}
+                                                        disabled={isPrimary}
+                                                    >
+                                                        <Icon name="star" size={14} /><span>{isPrimary ? '主模型' : '设为主模型'}</span>
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        onClick={() => runSingleTest(name, config)}
+                                                        disabled={testingProvider === name}
+                                                    >
+                                                        {testingProvider === name ? <Icon name="refresh-cw" size={14} className="spin" /> : <Icon name="zap" size={14} />}<span>测试</span>
+                                                    </button>
+                                                </div>
+
+                                                {statusMap[name] && (
+                                                    <div
+                                                        className={`status-badge ${statusMap[name].status}`}
+                                                        style={{ cursor: statusMap[name].status === 'error' ? 'pointer' : 'default', padding: '4px 8px' }}
+                                                        onClick={() => statusMap[name].status === 'error' && setSelectedError(statusMap[name].message)}
+                                                    >
+                                                        <Icon name={statusMap[name].status === 'success' ? 'check-circle' : 'alert-circle'} size={12} />
+                                                        <span>{statusMap[name].status === 'success' ? '可用' : '失败'}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                            {Object.keys(providers).length === 0 && (
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0', color: 'var(--text-secondary)', border: '2px dashed var(--border-color)', borderRadius: 20 }}>
+                                    当前配置暂无节点，点击右上方“增加节点”开始。
+                                </div>
+                            )}
+                        </div>
+                    </main>
+
+                    {/* 节点弹窗 */}
+                    {showAddModal && (
+                        <div className="modal-overlay">
+                            <div className="modal">
+                                <div className="modal-header">
+                                    <h2>{isEditMode ? '编辑模型节点' : '增加新节点'}</h2>
+                                    <button className="btn btn-outline" onClick={() => setShowAddModal(false)}><Icon name="x" size={16} /><span>关闭</span></button>
+                                </div>
+
+                                {!isEditMode && (
+                                    <div style={{ display: 'flex', background: 'hsla(0,0%,0%,0.2)', padding: '4px', borderRadius: '8px', marginBottom: '24px' }}>
+                                        <button
+                                            className={`btn ${addMode === 'form' ? 'btn-primary' : 'btn-outline'}`}
+                                            style={{ flex: 1, border: 'none', boxShadow: addMode === 'form' ? '' : 'none' }}
+                                            onClick={() => setAddMode('form')}
+                                        >
+                                            <Icon name="list" size={14} /><span>表单模式</span>
+                                        </button>
+                                        <button
+                                            className={`btn ${addMode === 'json' ? 'btn-primary' : 'btn-outline'}`}
+                                            style={{ flex: 1, border: 'none', boxShadow: addMode === 'json' ? '' : 'none' }}
+                                            onClick={() => setAddMode('json')}
+                                        >
+                                            <Icon name="code" size={14} /><span>JSON模式</span>
+                                        </button>
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleAddModel}>
+                                    {addMode === 'form' ? (
+                                        <React.Fragment>
+                                            <div className="form-group">
+                                                <label>节点名称 (唯一标识)</label>
+                                                <input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required disabled={isEditMode} placeholder="" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Base URL</label>
+                                                <input value={formData.baseUrl} onChange={e => setFormData({ ...formData, baseUrl: e.target.value })} required placeholder="" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>API Key</label>
+                                                <input type="password" value={formData.apiKey} onChange={e => setFormData({ ...formData, apiKey: e.target.value })} required placeholder="" />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>默认模型 ID</label>
+                                                <input value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })} required placeholder="" />
+                                            </div>
+                                        </React.Fragment>
+                                    ) : (
+                                        <div className="form-group">
+                                            <label>Provider JSON 代码</label>
+                                            <textarea
+                                                rows="12"
+                                                value={jsonCode}
+                                                onChange={e => setJsonCode(e.target.value)}
+                                                placeholder='{ "name": "MyNode", "baseUrl": "...", "apiKey": "...", "models": [...] }'
+                                                style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                                                required
+                                            ></textarea>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+                                                提示: 你可以粘贴单个节点的完整配置对象。
+                                            </p>
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
+                                        <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>确定</button>
+                                        <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowAddModal(false)}>取消</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 导入弹窗 */}
+                    {showImportModal && (
+                        <div className="modal-overlay">
+                            <div className="modal" style={{ maxWidth: 600 }}>
+                                <div className="modal-header">
+                                    <h2>导入 JSON 配置</h2>
+                                    <button className="btn btn-outline" onClick={() => setShowImportModal(false)}>
+                                        <Icon name="x" size={16} /><span>关闭</span>
+                                    </button>
+                                </div>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>您可以选择上传文件或直接粘贴 JSON 文本。</p>
+
+                                    <div style={{ border: '2px dashed var(--border-color)', borderRadius: '8px', padding: '30px', textAlign: 'center', marginBottom: '20px', position: 'relative', background: 'hsla(0,0%,0%,0.2)' }}>
+                                        <Icon name="upload-cloud" size={30} style={{ color: 'var(--text-secondary)' }} />
+                                        <div style={{ marginTop: '10px', color: 'var(--text-primary)' }}>点击或拖拽选择 openclaw.json 文件</div>
+                                        <input type="file" accept=".json" onChange={handleFileUpload} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' }} />
+                                    </div>
+
+                                    <div style={{ margin: '15px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+                                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>或者</span>
+                                        <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }}></div>
+                                    </div>
+
+                                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                                        <textarea
+                                            rows="8"
+                                            value={pasteText}
+                                            onChange={e => setPasteText(e.target.value)}
+                                            placeholder='在这里粘贴 openclaw.json 的内容...'
+                                            style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}
+                                        ></textarea>
+                                    </div>
+                                    <button className="btn btn-primary" style={{ width: '100%' }} disabled={!pasteText.trim()} onClick={() => {
+                                        try {
+                                            const json = JSON.parse(pasteText);
+                                            if (!json.models) throw new Error("无效的 OpenClaw 配置格式");
+                                            processImport(json, '导入配置');
+                                        } catch (e) { alert(e.message); }
+                                    }}>
+                                        <Icon name="check" size={16} /><span>确认解析并导入</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 错误详情 */}
+                    {selectedError && (
+                        <div className="modal-overlay" onClick={() => setSelectedError(null)}>
+                            <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h2 style={{ color: 'var(--danger)' }}>错误详情</h2>
+                                    <button className="btn btn-outline" onClick={() => setSelectedError(null)}><Icon name="x" size={14} /><span>关闭</span></button>
+                                </div>
+                                <div style={{ background: '#000', padding: 20, borderRadius: 8, maxHeight: 300, overflow: 'auto', fontSize: '0.9rem', color: '#ff6b6b', whiteSpace: 'pre-wrap', border: '1px solid var(--border-color)' }}>
+                                    {selectedError}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 问题弹窗 (Prompt) */}
+                    {promptModal.isOpen && (
+                        <div className="modal-overlay">
+                            <div className="modal" style={{ maxWidth: 400 }}>
+                                <h2>{promptModal.title}</h2>
+                                <div className="form-group" style={{ marginTop: 20 }}>
+                                    <input
+                                        autoFocus
+                                        value={promptInputValue}
+                                        onChange={e => setPromptInputValue(e.target.value)}
+                                        placeholder={promptModal.placeholder}
+                                        onKeyDown={e => e.key === 'Enter' && promptInputValue && (promptModal.onConfirm(promptInputValue), setPromptModal({ isOpen: false }))}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                    <button className="btn btn-outline" onClick={() => setPromptModal({ isOpen: false })}><span>取消</span></button>
+                                    <button className="btn btn-primary" disabled={!promptInputValue} onClick={() => { promptModal.onConfirm(promptInputValue); setPromptModal({ isOpen: false }); }}><span>确定</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 确认弹窗 */}
+                    {confirmModal.isOpen && (
+                        <div className="modal-overlay">
+                            <div className="modal" style={{ maxWidth: 400 }}>
+                                <h2>{confirmModal.title}</h2>
+                                <p style={{ margin: '20px 0', color: 'var(--text-secondary)' }}>{confirmModal.message}</p>
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                    {confirmModal.options.map((opt, i) => (
+                                        <button key={i} className={`btn ${opt.type === 'primary' ? 'btn-primary' : (opt.type === 'danger' ? 'btn-outline' : 'btn-outline')}`}
+                                            style={opt.type === 'danger' ? { color: 'var(--danger)', borderColor: 'var(--danger)' } : {}}
+                                            onClick={() => { setConfirmModal({ isOpen: false }); opt.onClick(); }}>
+                                            <span>{opt.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
