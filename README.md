@@ -7,9 +7,12 @@
 ![Docker Supported](https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white)
 ![Python 3.9+](https://img.shields.io/badge/Python-3.9+-yellow.svg)
 [![OAAI.xyz](https://img.shields.io/badge/Website-OAAI.xyz-purple.svg)](https://oaai.xyz)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-oaai.xyz%2Fmodel--radar-blue.svg)](https://oaai.xyz/model-radar/)
 
 **Say goodbye to heavy gateways: a pure local, zero-dependency AI model API node radar and configuration manager.** <br>
 *Brought to you by OAAI.xyz*
+
+> 🌐 **[Online Demo → https://oaai.xyz/model-radar/](https://oaai.xyz/model-radar/)** &nbsp;*(Read-only preview — no sign-in required)*
 
 </div>
 

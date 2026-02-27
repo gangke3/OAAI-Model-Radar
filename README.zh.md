@@ -7,9 +7,12 @@
 ![Docker Supported](https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white)
 ![Python 3.9+](https://img.shields.io/badge/Python-3.9+-yellow.svg)
 [![OAAI.xyz](https://img.shields.io/badge/Website-OAAI.xyz-purple.svg)](https://oaai.xyz)
+[![在线演示](https://img.shields.io/badge/🌐_在线演示-oaai.xyz%2Fmodel--radar-blue.svg)](https://oaai.xyz/model-radar/)
 
 **告别繁重的网关，纯本地零依赖的 AI 模型 API 节点探测雷达与配置管理器** <br>
 *由 OAAI.xyz 出品*
+
+> 🌐 **[在线演示 → https://oaai.xyz/model-radar/](https://oaai.xyz/model-radar/)** &nbsp;*（只读预览，无需登录）*
 
 </div>
 
