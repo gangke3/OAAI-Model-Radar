@@ -1,200 +1,101 @@
 <div align="center">
 
-# 🦀 OpenClaw Node Manager
+# 🦀 OAAI Model-Radar
 
-**A lightweight, zero-dependency AI API node manager for OpenClaw**
+![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen.svg)
+![Docker Supported](https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white)
+![Python 3.9+](https://img.shields.io/badge/Python-3.9+-yellow.svg)
+[![OAAI.xyz](https://img.shields.io/badge/Website-OAAI.xyz-purple.svg)](https://oaai.xyz)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)](https://python.org)
-[![Zero Dependencies](https://img.shields.io/badge/Backend-Zero%20Dependencies-success)](server.py)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-
-[中文文档](README.zh.md) · [Quick Start](#-quick-start) · [API Reference](#-api-reference) · [Contributing](CONTRIBUTING.md)
+**Say goodbye to heavy gateways: a pure local, zero-dependency AI model API node radar and configuration manager.** <br>
+*Brought to you by OAAI.xyz*
 
 </div>
 
 ---
 
-## ✨ What is OpenClaw Node Manager?
+## ✨ Interface Preview
 
-OpenClaw Node Manager is a **beautiful, production-ready web UI** for managing your OpenClaw API configurations. It lets you organize multiple AI model providers (OpenAI, Claude, DeepSeek, Gemini, OpenRouter, etc.) in one place — with visual status testing, multi-profile support, and zero server-side dependencies.
+<div align="center">
+  <img src="assets/screenshot.png" alt="OAAI Model-Radar UI" width="800" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"/>
+</div>
 
-### 🎯 Key Features
+### 🚀 One-Click Concurrent Testing
+Experience the lightning-fast concurrent connectivity test for all nodes:
+<div align="center">
+  <img src="assets/demo.gif" alt="Concurrent Testing Demo" width="800" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"/>
+</div>
 
-| Feature | Description |
-|---------|-------------|
-| 🚀 **Zero Backend Dependencies** | Server written in pure Python stdlib — no `pip install` ever needed |
-| 🎨 **Premium Dark UI** | Glassmorphism design with smooth micro-animations |
-| 🔀 **Multi-Profile Management** | Create, rename, copy, import & export configuration profiles |
-| ⚡ **Concurrent API Testing** | Test all nodes simultaneously with real-time status indicators |
-| 📦 **Single-File Frontend** | Entire UI is one `index.html` — works offline or as a static site |
-| 🌐 **OpenAI-Compatible** | Works with any OpenAI-compatible API endpoint |
-| 💾 **Import / Export** | Drag & drop JSON or paste to import; one-click export |
-| ⭐ **Primary Model** | Set and track which model is your default for OpenClaw agents |
+## � Core Features
 
----
+- **⚡ Pure Local & Zero Dependencies**: Built with Python's standard library. No need to install complex third-party dependencies.
+- **🚀 Elegant Concurrent Testing**: Test latency and connectivity of multiple API nodes and models concurrently with one click.
+- **🔐 True Local Security**: All configs and API keys are stored in local files. Not a single byte is uploaded to the cloud.
+- **📂 Seamless Multi-Config Switching**: Create separate, independent configurations for different projects and switch effortlessly.
+- **🐋 Out-of-the-Box Containerization**: Lightweight Docker support allows server deployment with a single command, ensuring auto-persisted data.
 
 ## 🚀 Quick Start
 
-### Option A: One-File Mode (No Build Needed)
+### Option A: Pure Local (Desktop Recommended)
+
+Enjoy a "double-click to run" experience utilizing our minimal startup scripts.
+
+**Windows OS:**
+1. Double-click the `start.bat` file in the directory.
+2. The script will initialize the service and automagically pop open `http://127.0.0.1:5000` in your default browser.
+
+**Mac / Linux OS:**
+```bash
+# 1. Grant execution permissions
+chmod +x start.sh
+
+# 2. Launch the service (opens your browser automatically)
+./start.sh
+```
+
+### Option B: Docker Deployment (Server Recommended)
+
+Perfect for sysadmins. Operations and configurations will flawlessly persist within your local `configs/` directory.
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/openclaw-node-manager.git
-cd openclaw-node-manager
+# 1. Ensure Docker and Docker Compose are installed.
+# 2. In the project root, run:
+docker-compose up -d
 
-# Start the server (Python 3.x, zero dependencies!)
-python server.py
-
-# Open your browser
-# → http://127.0.0.1:5000
+# 3. Access via http://<SERVER_IP>:5000
 ```
+To shut down, simply run `docker-compose down`.
 
-### Option B: Development Mode (With Hot Reload)
+## ⚙️ Configuration Structure
 
-```bash
-# Terminal 1 — Backend
-python server.py
-
-# Terminal 2 — Frontend dev server
-cd manager-ui
-npm install    # first time only
-npm run dev    # → http://localhost:5173
-```
-
-### Option C: Production Build
-
-```bash
-cd manager-ui && npm run build
-cd ..
-python server.py   # serves built frontend from dist/
-# → http://127.0.0.1:5000
-```
-
----
-
-## 📁 Project Structure
-
-```
-openclaw-node-manager/
-├── server.py              # Backend API server (Python stdlib only)
-├── index.html             # Complete frontend (single file, CDN React)
-├── configs/
-│   └── example_config.json   # Template — copy & fill in your API keys
-└── manager-ui/            # (Optional) Vite + React source for development
-    ├── src/
-    │   └── App.jsx
-    └── package.json
-```
-
----
-
-## ⚙️ Configuration
-
-Copy the example configuration and fill in your API keys:
-
-```bash
-cp configs/example_config.json configs/my_config.json
-# Edit my_config.json with your API keys
-```
-
-### Configuration Schema
+`OAAI Model-Radar` saves various configurations in the `configs/` directory inside standard JSON syntax. Structure logic is as follows:
 
 ```json
 {
-  "models": {
-    "providers": {
-      "ProviderName": {
-        "baseUrl": "https://api.example.com/v1",
-        "apiKey": "sk-YOUR_API_KEY",
-        "api": "openai-completions",
-        "models": [
-          {
-            "id": "model-id",
-            "name": "Display Name",
-            "reasoning": false,
-            "input": ["text", "image"],
-            "contextWindow": 128000,
-            "maxTokens": 4096
-          }
-        ]
-      }
-    }
-  },
-  "agents": {
-    "defaults": {
-      "model": { "primary": "ProviderName/model-id" }
+  "name": "My_First_Config",
+  "providers": {
+    "OpenAI": {
+      "baseUrl": "https://api.openai.com/v1",
+      "apiKey": "sk-xxx...",
+      "models": [
+        {
+          "id": "gpt-4-turbo",
+          "name": "GPT-4 Turbo"
+        }
+      ],
+      "primaryModel": "gpt-4-turbo",
+      "status": "available",
+      "latency": 350,
+      "lastTested": "2026-02-27T12:00:00.000Z"
     }
   }
 }
 ```
 
-### Supported Providers
+## � License
 
-Any OpenAI-compatible API works. Here are some tested providers:
-
-| Provider | Base URL |
-|----------|----------|
-| OpenAI | `https://api.openai.com/v1` |
-| Anthropic (Claude) | `https://api.anthropic.com/v1` |
-| DeepSeek | `https://api.deepseek.com/v1` |
-| OpenRouter | `https://openrouter.ai/api/v1` |
-| Alibaba Cloud (Qwen) | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
-| Moonshot (Kimi) | `https://api.moonshot.cn/v1` |
-| ZhipuAI (GLM) | `https://open.bigmodel.cn/api/paas/v4` |
-| NVIDIA NIM | `https://integrate.api.nvidia.com/v1` |
-| Google AI Studio | `https://generativelanguage.googleapis.com/v1beta/openai` |
+This project is licensed under the [MIT License](LICENSE). Your Stars ⭐ and PRs are always welcome!
 
 ---
-
-## 🔌 API Reference
-
-The backend exposes a simple REST API:
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/config/list` | GET | List all configuration profiles |
-| `/api/config?config=<name>` | GET | Read a full configuration |
-| `/api/config?config=<name>` | POST | Save a full configuration |
-| `/api/config?config=<name>` | DELETE | Delete a configuration profile |
-| `/api/providers?config=<name>` | GET | Get providers list only |
-| `/api/providers/<name>?config=<name>` | POST | Add / update a single provider |
-| `/api/providers/<name>?config=<name>` | DELETE | Remove a single provider |
-| `/api/test?config=<name>` | POST | Concurrently test all providers |
-| `/api/test/<name>` | POST | Test a single provider |
-
----
-
-## 🛠️ Requirements
-
-| Layer | Requirement |
-|-------|-------------|
-| Backend | Python 3.6+ (standard library only, no pip needed) |
-| Frontend (CDN mode) | Any modern browser |
-| Frontend (Dev mode) | Node.js 16+ & npm |
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-
-Made with ❤️ for OpenClaw users · [Report Bug](../../issues) · [Request Feature](../../issues)
-
-</div>
+> Made with ❤️ by **[OAAI.xyz](https://oaai.xyz)**
