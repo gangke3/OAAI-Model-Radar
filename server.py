@@ -32,7 +32,7 @@ BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(BASE_DIR, "configs")
 INDEX_FILE = os.path.join(BASE_DIR, "index.html")
 DEFAULT_CONFIG = "默认配置"
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 6006
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
 
 # ─── 初始化 configs 目录 ──────────────────────────────────────────────────────
 os.makedirs(CONFIG_DIR, exist_ok=True)

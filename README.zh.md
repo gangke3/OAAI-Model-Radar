@@ -27,7 +27,7 @@
 ### 🚀 一键并发测试体验
 感受“一键并发测试所有节点”的爽快感：
 <div align="center">
-  <img src="assets/demo.gif" alt="Concurrent Testing Demo" width="800" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"/>
+  <img src="assets/demo.webp" alt="Concurrent Testing Demo" width="800" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"/>
 </div>
 
 ## 🌟 核心特性 (Features)

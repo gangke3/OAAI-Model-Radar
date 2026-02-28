@@ -1045,29 +1045,68 @@
                 a.click();
             };
 
-            const runSingleTest = async (name, config) => {
-                setTestingProvider(name);
+            const runSingleTest = async (name, config, modelId) => {
+                const testKey = `${name}_${modelId}`;
+                setTestingProvider(testKey);
                 try {
+                    const testConfig = { ...config, models: [{ id: modelId }] };
                     const resp = await fetch(`${API_BASE}/test/${encodeURIComponent(name)}?config=${encodeURIComponent(currentConfigName)}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(config)
+                        body: JSON.stringify(testConfig)
                     });
                     const result = await resp.json();
-                    setStatusMap(prev => ({ ...prev, [name]: result }));
+                    setStatusMap(prev => ({ ...prev, [testKey]: result }));
                 } catch (err) {
-                    setStatusMap(prev => ({ ...prev, [name]: { status: 'error', message: err.message } }));
+                    setStatusMap(prev => ({ ...prev, [testKey]: { status: 'error', message: err.message } }));
                 } finally {
                     setTestingProvider(null);
                 }
             };
 
+            const runNodeTests = async (name, config) => {
+                setTestingProvider(name);
+                const promises = [];
+                (config.models || []).forEach(model => {
+                    const testKey = `${name}_${model.id}`;
+                    setStatusMap(prev => ({ ...prev, [testKey]: null }));
+                    const testConfig = { ...config, models: [{ id: model.id }] };
+                    const p = fetch(`${API_BASE}/test/${encodeURIComponent(name)}?config=${encodeURIComponent(currentConfigName)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(testConfig)
+                    }).then(r => r.json()).then(res => {
+                        setStatusMap(prev => ({ ...prev, [testKey]: res }));
+                    }).catch(err => {
+                        setStatusMap(prev => ({ ...prev, [testKey]: { status: 'error', message: err.message } }));
+                    });
+                    promises.push(p);
+                });
+                await Promise.all(promises);
+                setTestingProvider(null);
+            };
+
             const runGlobalTest = async () => {
                 setTesting(true);
                 try {
-                    const resp = await fetch(`${API_BASE}/test?config=${encodeURIComponent(currentConfigName)}`, { method: 'POST' });
-                    setStatusMap(await resp.json());
-                } catch (err) { alert(t('test_failed')); }
+                    const promises = [];
+                    Object.entries(providers).forEach(([name, config]) => {
+                        (config.models || []).forEach(model => {
+                            const testKey = `${name}_${model.id}`;
+                            const testConfig = { ...config, models: [{ id: model.id }] };
+                            const p = fetch(`${API_BASE}/test/${encodeURIComponent(name)}?config=${encodeURIComponent(currentConfigName)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(testConfig)
+                            }).then(r => r.json()).then(res => ({ key: testKey, res })).catch(err => ({ key: testKey, res: { status: 'error', message: err.message } }));
+                            promises.push(p);
+                        });
+                    });
+                    const resultsArray = await Promise.all(promises);
+                    const newMap = {};
+                    resultsArray.forEach(r => newMap[r.key] = r.res);
+                    setStatusMap(newMap);
+                } catch (err) { alert(t('test_failed') || 'Test Failed'); }
                 finally { setTesting(false); }
             };
 
@@ -1366,11 +1405,42 @@
                                                 <div className="info-row" title={t('api_key')}>
                                                     <Icon name="shield" size={12} /> <code>{maskApiKey(config.apiKey)}</code>
                                                 </div>
-                                                <div className="info-row" title={t('model_list')}>
-                                                    <Icon name="layers" size={12} />
-                                                    <span style={{ fontSize: '0.8rem' }}>
-                                                        {t('models_count', { count: config.models?.length || 0 })} ({config.models?.[0]?.id || 'N/A'}...)
-                                                    </span>
+                                                <div className="info-row" title={t('model_list')} style={{ alignItems: 'flex-start' }}>
+                                                    <Icon name="layers" size={12} style={{ marginTop: '4px' }} />
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', flex: 1 }}>
+                                                        {(config.models || []).map(m => {
+                                                            const testKey = `${name}_${m.id}`;
+                                                            const status = statusMap[testKey];
+                                                            return (
+                                                                <div key={m.id} style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                                                                    <div style={{ padding: '2px 8px', fontSize: '0.8rem', color: '#d1d5db' }}>{m.id}</div>
+                                                                    <button
+                                                                        className="btn"
+                                                                        style={{ padding: '0 6px', height: '100%', borderLeft: '1px solid var(--border-color)', borderBottom: 'none', borderTop: 'none', borderRight: 'none', borderRadius: 0, minHeight: '24px' }}
+                                                                        onClick={() => runSingleTest(name, config, m.id)}
+                                                                        disabled={testingProvider === testKey}
+                                                                        title={t('test_btn')}
+                                                                    >
+                                                                        {testingProvider === testKey ? <Icon name="refresh-cw" size={12} className="spin" /> : <Icon name="zap" size={12} />}
+                                                                    </button>
+                                                                    {status && (
+                                                                        <div
+                                                                            title={status.status === 'error' ? status.message : t('status_available')}
+                                                                            style={{
+                                                                                padding: '0 6px', height: '100%', display: 'flex', alignItems: 'center',
+                                                                                background: status.status === 'success' ? 'var(--success-bg)' : 'var(--danger-bg)',
+                                                                                color: status.status === 'success' ? 'var(--success)' : 'var(--danger)',
+                                                                                cursor: status.status === 'error' ? 'pointer' : 'default'
+                                                                            }}
+                                                                            onClick={() => status.status === 'error' && setSelectedError(status.message)}
+                                                                        >
+                                                                            <Icon name={status.status === 'success' ? 'check-circle' : 'alert-circle'} size={12} />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -1384,23 +1454,12 @@
                                                     </button>
                                                     <button
                                                         className="btn btn-outline"
-                                                        onClick={() => runSingleTest(name, config)}
+                                                        onClick={() => runNodeTests(name, config)}
                                                         disabled={testingProvider === name}
                                                     >
-                                                        {testingProvider === name ? <Icon name="refresh-cw" size={14} className="spin" /> : <Icon name="zap" size={14} />}<span>{t('test_btn')}</span>
+                                                        {testingProvider === name ? <Icon name="refresh-cw" size={14} className="spin" /> : <Icon name="zap" size={14} />}<span>{t('test_all_btn')}</span>
                                                     </button>
                                                 </div>
-
-                                                {statusMap[name] && (
-                                                    <div
-                                                        className={`status-badge ${statusMap[name].status}`}
-                                                        style={{ cursor: statusMap[name].status === 'error' ? 'pointer' : 'default', padding: '4px 8px' }}
-                                                        onClick={() => statusMap[name].status === 'error' && setSelectedError(statusMap[name].message)}
-                                                    >
-                                                        <Icon name={statusMap[name].status === 'success' ? 'check-circle' : 'alert-circle'} size={12} />
-                                                        <span>{statusMap[name].status === 'success' ? t('status_available') : t('status_failed')}</span>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                     );

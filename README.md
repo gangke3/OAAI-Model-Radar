@@ -27,10 +27,10 @@
 ### 🚀 One-Click Concurrent Testing
 Experience the lightning-fast concurrent connectivity test for all nodes:
 <div align="center">
-  <img src="assets/demo.gif" alt="Concurrent Testing Demo" width="800" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"/>
+  <img src="assets/demo.webp" alt="Concurrent Testing Demo" width="800" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"/>
 </div>
 
-## � Core Features
+##  Core Features
 
 - **⚡ Pure Local & Zero Dependencies**: Built with Python's standard library. No need to install complex third-party dependencies.
 - **🚀 Elegant Concurrent Testing**: Test latency and connectivity of multiple API nodes and models concurrently with one click.
