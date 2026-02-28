@@ -1,7 +1,7 @@
 """
-OpenClaw Node Manager — Backend Server
+OAAI Model-Radar — Backend Server
 ========================================
-A zero-dependency HTTP server for managing OpenClaw API configurations.
+A zero-dependency HTTP server for managing LLM API configurations.
 
 Features:
   - Multi-profile config management (create / read / update / delete)
@@ -25,13 +25,14 @@ import urllib.request
 import urllib.error
 import threading
 import sys
+import webbrowser
 
 # ─── 路径配置 ────────────────────────────────────────────────────────────────
 BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = os.path.join(BASE_DIR, "configs")
 INDEX_FILE = os.path.join(BASE_DIR, "index.html")
 DEFAULT_CONFIG = "默认配置"
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 5000
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 6006
 
 # ─── 初始化 configs 目录 ──────────────────────────────────────────────────────
 os.makedirs(CONFIG_DIR, exist_ok=True)
@@ -204,7 +205,7 @@ class Handler(BaseHTTPRequestHandler):
 
         # 6. index.html 不存在时给出提示
         msg = (
-            b"<h2>OpenClaw Node Manager API is running.</h2>"
+            b"<h2>OAAI Model-Radar API is running.</h2>"
             b"<p>index.html not found in root directory!</p>"
         )
         self.send_response(200)
@@ -322,6 +323,13 @@ class Handler(BaseHTTPRequestHandler):
 # ─── 入口 ──────────────────────────────────────────────────────────────────────
 if __name__ == '__main__':
     import socket
+    import sys
+    if sys.stdout.encoding.lower() != 'utf-8':
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except AttributeError:
+            pass
+
 
     # Bind to all interfaces so LAN devices can also connect
     server = ThreadingHTTPServer(('0.0.0.0', PORT), Handler)
@@ -333,7 +341,7 @@ if __name__ == '__main__':
         lan_ip = '127.0.0.1'
 
     print(f"")
-    print(f"  🦀  OpenClaw Node Manager")
+    print(f"  🦀  OAAI Model-Radar")
     print(f"  {'─' * 40}")
     print(f"  Local  : http://127.0.0.1:{PORT}")
     print(f"  Network: http://{lan_ip}:{PORT}")
@@ -345,6 +353,11 @@ if __name__ == '__main__':
     print(f"  {'─' * 40}")
     print(f"  Press Ctrl+C to stop")
     print(f"")
+
+    # 自动打开浏览器（延时 0.5 秒以确保服务已启动）
+    if os.path.isfile(INDEX_FILE):
+        threading.Timer(0.5, lambda: webbrowser.open(f'http://127.0.0.1:{PORT}')).start()
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:

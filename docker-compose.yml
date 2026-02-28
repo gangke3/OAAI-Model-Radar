@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  oaai-model-radar:
+    build: .
+    container_name: oaai-model-radar
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./configs:/app/configs
+    restart: always

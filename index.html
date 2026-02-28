@@ -567,6 +567,7 @@
                 json_parse_failed: "JSON 解析失败: ",
                 invalid_json: "无效的 Provider JSON 格式",
                 node_name_required: "请输入节点名称",
+                duplicate_node_name: "节点名称 \"{name}\" 已存在，请使用其他名称。",
                 invalid_config_format: "无效的配置格式",
                 parse_config_failed: "解析配置文件失败: ",
                 json_copied: "JSON 已复制到剪贴板",
@@ -648,6 +649,7 @@
                 json_parse_failed: "JSON parse failed: ",
                 invalid_json: "Invalid Provider JSON format",
                 node_name_required: "Please input node name",
+                duplicate_node_name: "Node name \"{name}\" already exists. Please use a different name.",
                 invalid_config_format: "Invalid LLM config format",
                 parse_config_failed: "Failed to parse config: ",
                 json_copied: "JSON copied to clipboard",
@@ -1105,16 +1107,24 @@
                         // 支持两种格式: 直接是对象 { name: {...} } 或 数组 [{ name: ... }, ...] 或 单个 Provider 对象 (需手动输名字)
                         // 这里我们约定 JSON 模式下输入的是单一 Provider 的配置，或者是带有名称的对象
                         if (parsed.name && (parsed.baseUrl || parsed.apiKey)) {
-                            // 格式 1: { name: "xxx", baseUrl: "...", ... }
+                            // Format 1: { name: "xxx", baseUrl: "...", ... }
                             const { name, ...config } = parsed;
+                            if (!isEditMode && providers[name]) {
+                                alert(t('duplicate_node_name', { name }));
+                                return;
+                            }
                             newProviders[name] = {
                                 ...config,
                                 api: config.api || "openai-completions",
                                 models: config.models || [{ id: config.model || "default", name: config.model || "default", reasoning: false, input: ["text"], contextWindow: 128000, maxTokens: 8192 }]
                             };
                         } else if (typeof parsed === 'object' && !Array.isArray(parsed)) {
-                            // 格式 2: 直接是配置项，名称使用表单里的（如果填了）
+                            // Format 2: use name from form field
                             const name = formData.name || `${language === 'zh' ? '节点_' : 'Node_'}${Date.now().toString().slice(-4)}`;
+                            if (!isEditMode && providers[name]) {
+                                alert(t('duplicate_node_name', { name }));
+                                return;
+                            }
                             newProviders[name] = {
                                 ...parsed,
                                 api: parsed.api || "openai-completions",
@@ -1130,6 +1140,7 @@
                 } else {
                     const { name, ...config } = formData;
                     if (!name) { alert(t('node_name_required')); return; }
+                    if (!isEditMode && providers[name]) { alert(t('duplicate_node_name', { name })); return; }
                     if (!config.baseUrl) { alert('Please enter a Base URL.'); return; }
                     if (!config.apiKey) { alert('Please enter an API Key.'); return; }
                     if (!config.model) { alert('Please enter a Default Model ID.'); return; }
